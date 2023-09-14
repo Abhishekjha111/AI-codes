@@ -2,9 +2,7 @@
 import cv2
 import easyocr
 import os
-import multiprocessing
 import pandas as pd
-import numpy as np
 
 # Initialize the EasyOCR reader
 reader = easyocr.Reader(['en'])  # You can add more languages as needed
@@ -45,21 +43,9 @@ def extract_text_from_image(image_path):
     except Exception as e:
         return []
 
-# Function to process images in parallel
-def process_images(image_paths):
-    extracted_text = []
-    for image_path in image_paths:
-        text = extract_text_from_image(image_path)
-        extracted_text.extend(text)
-    return extracted_text
-
 # Get a list of image file paths from the folder
 image_paths = [os.path.join(image_path, filename) for filename in os.listdir(image_path)
                if filename.endswith(('.jpg', '.jpeg', '.png'))]
-
-# Split the image paths into chunks for parallel processing
-num_cores = multiprocessing.cpu_count()
-image_chunks = [image_paths[i:i + num_cores] for i in range(0, len(image_paths), num_cores)]
 
 # Initialize a progress counter
 processed_count = 0
@@ -68,16 +54,12 @@ total_images = len(image_paths)
 # Initialize a list to store extracted text
 all_extracted_text = []
 
-# Process images in parallel
-pool = multiprocessing.Pool(processes=num_cores)
-for extracted_text_chunk in pool.imap_unordered(process_images, image_chunks):
-    all_extracted_text.extend(extracted_text_chunk)
-    processed_count += len(extracted_text_chunk)
+# Process images sequentially
+for image_path in image_paths:
+    extracted_text = extract_text_from_image(image_path)
+    all_extracted_text.extend(extracted_text)
+    processed_count += 1
     print(f"Processed {processed_count}/{total_images} images")
-
-# Close the multiprocessing pool
-pool.close()
-pool.join()
 
 # Create a DataFrame to store the extracted text
 df = pd.DataFrame({'Extracted Text': all_extracted_text})
