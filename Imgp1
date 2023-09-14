@@ -1,0 +1,91 @@
+import cv2
+import easyocr
+import os
+import multiprocessing
+import pandas as pd
+import numpy as np
+
+# Initialize the EasyOCR reader
+reader = easyocr.Reader(['en'])  # You can add more languages as needed
+
+# Path to the folder containing your images
+image_path = "C:/Users/aj941891/sample_images"
+
+# Function to process and extract text from an image
+def extract_text_from_image(image_path):
+    try:
+        # Load the image using OpenCV
+        image = cv2.imread(image_path)
+
+        # Automatically detect and correct the orientation of the image
+        if 'deskew' in reader.model_list[0].module_list:
+            image = reader.model_list[0].module_list[0].deskew(image)
+
+        # Convert the image to grayscale
+        gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+        # Perform additional preprocessing (e.g., noise removal, resizing)
+        # Noise removal using Gaussian blur
+        gray_image = cv2.GaussianBlur(gray_image, (5, 5), 0)
+
+        # Resize the image for better OCR accuracy
+        resized_image = cv2.resize(gray_image, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
+
+        # Apply adaptive thresholding to binarize the image
+        binary_image = cv2.adaptiveThreshold(resized_image, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 2)
+
+        # Use EasyOCR to extract text from the preprocessed image
+        result = reader.readtext(binary_image)
+
+        # Filter results based on confidence scores
+        high_confidence_text = [entry[1] for entry in result if entry[2] > 0.7]  # Adjust confidence threshold as needed
+
+        return high_confidence_text
+    except Exception as e:
+        return []
+
+# Function to process images in parallel
+def process_images(image_paths):
+    extracted_text = []
+    for image_path in image_paths:
+        text = extract_text_from_image(image_path)
+        extracted_text.extend(text)
+    return extracted_text
+
+# Get a list of image file paths from the folder
+image_paths = [os.path.join(image_folder, filename) for filename in os.listdir(image_folder)
+               if filename.endswith(('.jpg', '.jpeg', '.png'))]
+
+# Split the image paths into chunks for parallel processing
+num_cores = multiprocessing.cpu_count()
+image_chunks = [image_paths[i:i + num_cores] for i in range(0, len(image_paths), num_cores)]
+
+# Initialize a progress counter
+processed_count = 0
+total_images = len(image_paths)
+
+# Initialize a list to store extracted text
+all_extracted_text = []
+
+# Process images in parallel
+pool = multiprocessing.Pool(processes=num_cores)
+for extracted_text_chunk in pool.imap_unordered(process_images, image_chunks):
+    all_extracted_text.extend(extracted_text_chunk)
+    processed_count += len(image_paths)
+    print(f"Processed {processed_count}/{total_images} images")
+
+# Close the multiprocessing pool
+pool.close()
+pool.join()
+
+# Create a DataFrame to store the extracted text
+df = pd.DataFrame({'Extracted Text': all_extracted_text})
+
+# Save the DataFrame to a CSV file
+df.to_csv('extracted_text.csv', index=False)
+
+# Analyze/group extracted texts
+# For example, you can count and print the most frequent words
+word_counts = df['Extracted Text'].str.split().explode().value_counts()
+print("Most frequent words:")
+print(word_counts.head(10))
