@@ -1,3 +1,4 @@
+
 import cv2
 import easyocr
 import os
@@ -53,7 +54,7 @@ def process_images(image_paths):
     return extracted_text
 
 # Get a list of image file paths from the folder
-image_paths = [os.path.join(image_folder, filename) for filename in os.listdir(image_folder)
+image_paths = [os.path.join(image_path, filename) for filename in os.listdir(image_path)
                if filename.endswith(('.jpg', '.jpeg', '.png'))]
 
 # Split the image paths into chunks for parallel processing
@@ -71,7 +72,7 @@ all_extracted_text = []
 pool = multiprocessing.Pool(processes=num_cores)
 for extracted_text_chunk in pool.imap_unordered(process_images, image_chunks):
     all_extracted_text.extend(extracted_text_chunk)
-    processed_count += len(image_paths)
+    processed_count += len(extracted_text_chunk)
     print(f"Processed {processed_count}/{total_images} images")
 
 # Close the multiprocessing pool
