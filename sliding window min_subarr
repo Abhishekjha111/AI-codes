@@ -1,0 +1,33 @@
+def smallestSubarrayWithSum(array, target):
+    # Initialize variables
+    length = float('inf') # Length of the smallest subarray
+    subarray = () # Coefficients of the smallest subarray
+    left = 0 # Left pointer of the sliding window
+    right = 0 # Right pointer of the sliding window
+    current_sum = 0 # Sum of the elements in the current window
+
+    # Loop through the array
+    while right < len(array):
+        # Add the rightmost element to the current sum and window
+        current_sum += array[right]
+        right += 1
+
+        # Shrink the window from the left until the current sum is less than or equal to the target
+        while current_sum > target and left < right:
+            current_sum -= array[left]
+            left += 1
+
+        # Check if the current sum is equal to the target and update the output if needed
+        if current_sum == target:
+            if right - left < length:
+                length = right - left
+                subarray = tuple(array[left:right])
+
+    # Return -1 if no subarray found, otherwise return the length and the subarray as a tuple
+    return -1 if length == float('inf') else (length, subarray)
+
+# Example usage:
+A = [1, 4, 20, 3, 10, 5]
+B = 33
+result = smallestSubarrayWithSum(A, B)
+print(result)
