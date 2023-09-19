@@ -1,6 +1,4 @@
-Certainly, I can provide additional changes and modifications to the code for text extraction from images. Here's a modified version of the code that includes comments explaining each step:
 
-```python
 import cv2
 import easyocr
 import os
@@ -94,6 +92,3 @@ df.to_csv('extracted_text.csv', index=False)
 word_counts = df['Extracted Text'].str.split().explode().value_counts()
 print("Most frequent words:")
 print(word_counts.head(10))
-```
-
-This code extends the previous code by processing multiple images from a folder and saving the extracted text from all images into a single CSV file. It continues to use the EAST text detector and EasyOCR for text extraction. The code now processes all images in the specified folder and provides output as explained earlier.
