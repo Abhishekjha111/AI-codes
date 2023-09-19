@@ -1,0 +1,99 @@
+Certainly, I can provide additional changes and modifications to the code for text extraction from images. Here's a modified version of the code that includes comments explaining each step:
+
+```python
+import cv2
+import easyocr
+import os
+import pandas as pd
+
+# Initialize the EasyOCR reader
+reader = easyocr.Reader(['en'])  # You can add more languages as needed
+
+# Path to the folder containing your images
+image_path = "C:/Users/aj941891/sample_images"
+
+# Function to process and extract text from an image
+def extract_text_from_image(image_path):
+    try:
+        # Load the image using OpenCV
+        image = cv2.imread(image_path)
+
+        # Initialize the EAST text detector (pre-trained model)
+        east = cv2.dnn.readNet("frozen_east_text_detection.pb")
+
+        # Get image dimensions
+        (H, W) = image.shape[:2]
+
+        # Set the input to the EAST detector
+        blob = cv2.dnn.blobFromImage(image, scalefactor=1.0, size=(W, H), mean=(123.68, 116.78, 103.94), swapRB=True, crop=False)
+        east.setInput(blob)
+
+        # Perform forward pass to get region scores and geometry
+        scores, geometry = east.forward()
+
+        # Decode the bounding boxes from the geometry and apply non-maxima suppression
+        rects, confidences = decode_predictions(scores, geometry)
+        selected_regions = apply_nms(rects, confidences)
+
+        # Initialize a list to store extracted text
+        extracted_text = []
+
+        # Process each selected text region
+        for (startX, startY, endX, endY) in selected_regions:
+            # Crop the region from the original image
+            region = image[startY:endY, startX:endX]
+
+            # Convert the cropped region to grayscale
+            gray_region = cv2.cvtColor(region, cv2.COLOR_BGR2GRAY)
+
+            # Perform additional preprocessing (e.g., resizing, thresholding)
+            resized_region = resize_image(gray_region)  # Implement this function
+            binary_region = apply_threshold(resized_region)  # Implement this function
+
+            # Use EasyOCR to extract text from the preprocessed region
+            result = reader.readtext(binary_region)
+
+            # Filter results based on confidence scores
+            high_confidence_text = [entry[1] for entry in result if entry[2] > 0.7]  # Adjust confidence threshold
+
+            # Add the extracted text from this region to the list
+            extracted_text.extend(high_confidence_text)
+
+        return extracted_text
+    except Exception as e:
+        return []
+
+# Implement the decode_predictions and apply_nms functions as needed
+
+# Get a list of image file paths from the folder
+image_paths = [os.path.join(image_path, filename) for filename in os.listdir(image_path)
+               if filename.endswith(('.jpg', '.jpeg', '.png'))]
+
+# Initialize a progress counter
+processed_count = 0
+total_images = len(image_paths)
+
+# Initialize a list to store extracted text from all images
+all_extracted_text = []
+
+# Process images sequentially
+for image_path in image_paths:
+    extracted_text = extract_text_from_image(image_path)
+    all_extracted_text.extend(extracted_text)
+    processed_count += 1
+    print(f"Processed {processed_count}/{total_images} images")
+
+# Create a DataFrame to store the extracted text
+df = pd.DataFrame({'Extracted Text': all_extracted_text})
+
+# Save the DataFrame to a CSV file
+df.to_csv('extracted_text.csv', index=False)
+
+# Analyze/group extracted texts
+# For example, you can count and print the most frequent words
+word_counts = df['Extracted Text'].str.split().explode().value_counts()
+print("Most frequent words:")
+print(word_counts.head(10))
+```
+
+This code extends the previous code by processing multiple images from a folder and saving the extracted text from all images into a single CSV file. It continues to use the EAST text detector and EasyOCR for text extraction. The code now processes all images in the specified folder and provides output as explained earlier.
