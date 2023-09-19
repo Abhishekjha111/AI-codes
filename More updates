@@ -1,0 +1,75 @@
+
+import easyocr
+import os
+import pandas as pd
+
+# Initialize the EasyOCR reader
+reader = easyocr.Reader(['en'])  # You can add more languages as needed
+
+# Path to the folder containing your images
+image_path = "C:/Users/aj941891/sample_images"
+
+# Function to extract and merge text from an image
+def extract_and_merge_text(image_path):
+    try:
+        # Use EasyOCR to extract text from the image
+        result = reader.readtext(image_path)
+
+        # Initialize a list to store extracted text
+        extracted_text = []
+
+        # Process the results from EasyOCR
+        for (bbox, text, prob) in result:
+            # Remove newline characters and whitespace from extracted text
+            cleaned_text = ''.join(text.split())
+
+            # Append cleaned text to the list
+            extracted_text.append(cleaned_text)
+
+        # Merge the extracted text into a single string
+        merged_text = ''.join(extracted_text)
+
+        return merged_text
+    except Exception as e:
+        return ""
+
+# Get a list of image file paths from the folder
+image_paths = [os.path.join(image_path, filename) for filename in os.listdir(image_path)
+               if filename.endswith(('.jpg', '.jpeg', '.png'))]
+
+# Initialize a progress counter
+processed_count = 0
+total_images = len(image_paths)
+
+# Initialize a list to store merged text from all images
+all_merged_text = []
+
+# Process images sequentially
+for image_path in image_paths:
+    merged_text = extract_and_merge_text(image_path)
+    all_merged_text.append(merged_text)
+    processed_count += 1
+    print(f"Processed {processed_count}/{total_images} images")
+
+# Create a DataFrame to store the merged text
+df = pd.DataFrame({'Merged Text': all_merged_text})
+
+# Save the DataFrame to a CSV file
+df.to_csv('merged_text.csv', index=False)
+
+# Print the merged text from all images
+for text in all_merged_text:
+    print("Merged Text from one image:")
+    print(text)
+    print("\n" + "="*50 + "\n")  # Separator between images
+```
+
+In this modified code:
+
+- We introduce a `cleaned_text` variable to remove newline characters and whitespace from the extracted text for each region.
+- We concatenate the cleaned text for each region into a single string called `merged_text`. This ensures that digits and characters from different regions are combined into one continuous string.
+- We store the merged text in the `all_merged_text` list for each image.
+- The code then proceeds to create a DataFrame and save the merged text to a CSV file.
+- Finally, it prints the merged text for each image, separating them with a separator for clarity.
+
+This code should merge the extracted text into a format like '83.388.859.9' for your specified use case.
