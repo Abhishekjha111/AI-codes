@@ -1,0 +1,63 @@
+
+import easyocr
+import os
+import pandas as pd
+
+# Initialize the EasyOCR reader
+reader = easyocr.Reader(['en'])  # You can add more languages as needed
+
+# Path to the folder containing your images
+image_path = "C:/Users/aj941891/sample_images"
+
+# Function to extract text from an image
+def extract_text_from_image(image_path):
+    try:
+        # Use EasyOCR to extract text from the image
+        result = reader.readtext(image_path)
+
+        # Initialize a list to store extracted text
+        extracted_text = []
+
+        # Process the results from EasyOCR
+        for (bbox, text, prob) in result:
+            extracted_text.append(text)
+
+        # Join all extracted text into a single string
+        complete_text = '\n'.join(extracted_text)
+
+        return complete_text
+    except Exception as e:
+        return ""
+
+# Get a list of image file paths from the folder
+image_paths = [os.path.join(image_path, filename) for filename in os.listdir(image_path)
+               if filename.endswith(('.jpg', '.jpeg', '.png'))]
+
+# Initialize a progress counter
+processed_count = 0
+total_images = len(image_paths)
+
+# Initialize a list to store extracted text from all images
+all_extracted_text = []
+
+# Process images sequentially
+for image_path in image_paths:
+    extracted_text = extract_text_from_image(image_path)
+    all_extracted_text.append(extracted_text)
+    processed_count += 1
+    print(f"Processed {processed_count}/{total_images} images")
+
+# Create a DataFrame to store the extracted text
+df = pd.DataFrame({'Extracted Text': all_extracted_text})
+
+# Save the DataFrame to a CSV file
+df.to_csv('extracted_text.csv', index=False)
+
+# Print the extracted text from all images
+for text in all_extracted_text:
+    print("Text from one image:")
+    print(text)
+    print("\n" + "="*50 + "\n")  # Separator between images
+```
+
+In this code, we extract the complete text from each image and save it in the `all_extracted_text` list. After processing all images, we save the entire extracted text in a CSV file and print it for each image. This code is designed to provide the complete text from each image without any splitting or word frequency analysis.
