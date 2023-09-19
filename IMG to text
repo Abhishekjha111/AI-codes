@@ -1,0 +1,129 @@
+
+Table of Contents
+Introduction	1:	1
+Requirement:	1	2
+Solution Proposed:	1	3
+     System and Package Requirements:	1	4
+     Output Format:	1	5
+     Detailed Explanation of solution with sample code:	1	6
+
+-
+Image to Text Extraction
+1.Introduction
+The requirement is to develop a Python script for Optical Character Recognition (OCR) that can be used with minimal effort. The script should accept an image file path as input, perform OCR on it, and provide output in both a visual format (bounding boxes around recognized text) and a structured format (CSV file containing recognized text and probabilities).
+The proposed solution leverages Python and popular libraries to streamline OCR tasks. Key libraries used include cv2 (OpenCV), sys, easyocr, and csv. The cv2 library is used for image processing, while sys provides access to system-related functions. The easyocr library simplifies OCR operations, and the csv library facilitates CSV file operations.
+The script is designed for simplicity and efficiency, requiring minimal setup. It initializes an OCR reader for English language text recognition using the easyocr library. Users can specify the image file path as a command-line argument. The script reads the image, converts it to bytes, and conducts OCR analysis. OCR results are processed, extracting text, bounding boxes, and confidence probabilities. Bounding boxes are overlaid onto the original image to visually highlight recognized text regions. The recognized text and corresponding probabilities are systematically saved in a CSV file.
+
+2.Requirement:
+•	The requirement is to develop a Python script for Optical Character Recognition (OCR) that can be used with minimal effort.
+•	The script should accept an image file path as input, perform OCR on it, and provide output in both a visual format (bounding boxes around recognized text) and a structured format (CSV file containing recognized text and probabilities).
+3.Solution Proposed:
+	The solution leverages Python and popular libraries to streamline OCR tasks.
+	Key libraries used include:
+	`cv2` (OpenCV): Used for image processing.
+	`sys`: Provides access to system-related functions.
+	`easyocr`: Simplifies OCR operations.
+	`csv`: Facilitates CSV file operations.
+	The script is designed for simplicity and efficiency, requiring minimal setup.
+	It initializes an OCR reader for English language text recognition using the `easyocr` library.
+	Users can specify the image file path as a command-line argument.
+	The script reads the image, converts it to bytes, and conducts OCR analysis.
+	OCR results are processed, extracting text, bounding boxes, and confidence probabilities.
+	Bounding boxes are overlaid onto the original image to visually highlight recognized text regions.
+	The recognized text and corresponding probabilities are systematically saved in a CSV file.
+	The script also offers a real-time view of the image with overlays of bounding boxes and recognized text.
+
+1.System and Package Requirements:
+	A Python 3.x environment.
+	The following Python libraries must be installed:
+•	cv2 (OpenCV): Install using `pip install opencv-python`.
+•	easyocr: Install via `pip install easyocr`.
+•	CSV: Install using ‘pip install csv’
+
+ 2.Output Format:
+	The script generates the following output:
+ 
+
+	A 'ocr_result.csv' file containing recognized text and their associated probabilities.
+	A visual window displaying the original image with superimposed bounding boxes around identified text regions, along with the recognized text and probabilities.
+
+Note: Ensure you adjust the `impath` variable in the code to specify the actual image file you want to process. This solution simplifies OCR tasks while providing both visual and structured output for ease of use.
+3.Detailed Explanation of solution with sample code:
+import cv2
+import sys
+import easyocr
+import csv # import csv module
+
+# create a reader object with english language
+reader = easyocr.Reader(['en'])
+
+if __name__ == '__main__':
+if len(sys.argv) < 2:
+print('usage: python ocr_simple.py image.jpg')
+sys.exit(1)
+
+# get the image path from the command line argument
+impath = r'C:\Users\aj941891\MicrosoftTeams-image.png'
+
+# reading an image in default mode
+image = cv2.imread(impath)
+
+# run easyocr on image and get the text and bounding boxes
+result = reader.readtext(image)
+
+# create a new csv file with 'w' mode
+csvfile = open('ocr_result.csv', 'w', newline='')
+# create a csv writer object
+writer = csv.writer(csvfile)
+
+# loop over the result
+for (bbox, text, prob) in result:
+# get the coordinates of the bounding box
+(x1, y1), (x2, y2), (x3, y3), (x4, y4) = bbox
+
+# draw a rectangle around the text
+cv2.rectangle(image, (x1, y1), (x3, y3), (0, 255, 0), 2)
+
+# put the text and the probability on the image
+cv2.putText(image, f'{text} ({prob:.2f})', (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+
+# write the text and the probability to the csv file
+writer.writerow([text, prob])
+
+# close the csv file
+csvfile.close()
+
+# display the image and wait for a key press
+cv2.imshow('OCR Result', image)
+cv2.waitKey(0)
+
+
+For Text extraction from Images various methods are there, but main challenge is to extract proper custom or the ‘required only’ text /data.  First of all we create a reader object with English language (you can define if there is different language other than English). Here basically we are doing fine tuning of the text extracted from image using easyocr.  After reading image in default mode using CV2 , then we ran easyocr in those images to get text and bounding boxes.
+	ran easyocr on image and get the text and bounding boxes.
+      ---- result = reader.readtext(image)
+----image = cv2.imread(impath)
+
+	Now we got the result then we saved those texts into csv 
+
+---csvfile = open('ocr_result.csv', 'w', newline='')
+
+	Now we will loop over these images. So that we can get exact text and also we will sure that extraction is correct (we are fine tuning and validating the results. 
+Now get the coordinates of the bounding box using this code
+
+--- “(x1, y1), (x2, y2), (x3, y3), (x4, y4) = bbox”.  
+
+	Drawn a rectangle around the text so that only required co-ordinates will get extracted. 
+
+---cv2.rectangle(image, (x1, y1), (x3, y3), (0, 255, 0), 2)
+
+	After that using below code, we put the text and the probability on the image (which text has most probability of match. 
+
+---cv2.putText(image, f'{text} ({prob:.2f})', (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+
+	write the text and the probability to the csv file
+
+writer.writerow([text, prob]).
+Then we save this into a csv. And this will look like below in excel. Now we can further clean this result for better result.
+
+For more than 1 image from folder only difference is we will read image from a folder but the result we are getting here is merged calculated result of all the images, so the extraction is not correct i.e not in proper and also output is not suitable. So, reading image one by one is the way to get proper results.   
+
