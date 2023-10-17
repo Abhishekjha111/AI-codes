@@ -1,10 +1,12 @@
+# This code fine-tunes BERT for multiclass classification of text data.
+
 import torch
 import torch.nn as nn
 from transformers import BertTokenizer, BertForSequenceClassification
 from torch.utils.data import DataLoader, TensorDataset
 from sklearn.model_selection import train_test_split
 
-# Define your text data and labels
+# Define the text data and labels
 text_data = [...]  # List of customer conversation text
 labels = [...]  # List of corresponding labels (e.g., "need improvement," "no improvement," etc.)
 
