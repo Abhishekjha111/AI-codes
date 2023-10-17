@@ -1,0 +1,62 @@
+import torch
+import torch.nn as nn
+from transformers import BertTokenizer, BertForSequenceClassification
+from torch.utils.data import DataLoader, TensorDataset
+from sklearn.model_selection import train_test_split
+
+# Define your text data and labels
+text_data = [...]  # List of customer conversation text
+labels = [...]  # List of corresponding labels (e.g., "need improvement," "no improvement," etc.)
+
+# Split the data into training and testing sets
+train_texts, test_texts, train_labels, test_labels = train_test_split(text_data, labels, test_size=0.2, random_state=42)
+
+# Load the BERT tokenizer and model
+tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+model = BertForSequenceClassification.from_pretrained("bert-base-uncased", num_labels=len(set(labels)))
+
+# Tokenize the text data
+train_encodings = tokenizer(train_texts, truncation=True, padding=True, return_tensors="pt")
+test_encodings = tokenizer(test_texts, truncation=True, padding=True, return_tensors="pt")
+
+# Create PyTorch datasets
+train_dataset = TensorDataset(train_encodings["input_ids"], train_encodings["attention_mask"], torch.tensor(train_labels))
+test_dataset = TensorDataset(test_encodings["input_ids"], test_encodings["attention_mask"], torch.tensor(test_labels))
+
+# Define data loaders
+batch_size = 16
+train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+
+# Define the optimizer and loss function
+optimizer = torch.optim.AdamW(model.parameters(), lr=1e-5)
+criterion = nn.CrossEntropyLoss()
+
+# Training loop
+num_epochs = 5
+for epoch in range(num_epochs):
+    model.train()
+    for batch in train_loader:
+        input_ids, attention_mask, labels = batch
+        optimizer.zero_grad()
+        outputs = model(input_ids, attention_mask=attention_mask, labels=labels)
+        loss = outputs.loss
+        loss.backward()
+        optimizer.step()
+
+# Evaluation
+model.eval()
+correct, total = 0, 0
+with torch.no_grad():
+    for batch in test_loader:
+        input_ids, attention_mask, labels = batch
+        outputs = model(input_ids, attention_mask=attention_mask)
+        predictions = torch.argmax(outputs.logits, dim=1)
+        total += labels.size(0)
+        correct += (predictions == labels).sum().item()
+
+accuracy = correct / total
+print(f"Accuracy on the test set: {accuracy * 100:.2f}%")
+
+# Save the fine-tuned model
+torch.save(model.state_dict(), 'fine-tuned-bert-speech-classification-model.pt')
