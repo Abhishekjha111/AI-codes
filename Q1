@@ -1,0 +1,21 @@
+To count the number of times each user has opened documents by month in the last 6 months, you'll need to modify your SQL query and group the results by month. Here's how you can do it:
+
+```sql
+SELECT
+    o.user_id,
+    DATEPART(YEAR, o.document_opened_datetime) AS year,
+    DATEPART(MONTH, o.document_opened_datetime) AS month,
+    COUNT(*) AS document_openings
+FROM dbo.query_response_log q
+JOIN dbo.response_opendocuments_log o ON q.queryid = o.queryid
+WHERE o.document_opened_datetime >= DATEADD(MONTH, -6, GETDATE())
+GROUP BY o.user_id, DATEPART(YEAR, o.document_opened_datetime), DATEPART(MONTH, o.document_opened_datetime);
+```
+
+In this query:
+
+- We extract the year and month from the `document_opened_datetime` using `DATEPART`.
+- The `COUNT(*)` function is used to count how many times each user opened a document in a specific month.
+- The `GROUP BY` clause groups the results by `user_id`, year, and month.
+
+This query will give you a count of document openings for each user, broken down by year and month over the last 6 months. You can then use a reporting tool to present this data in a user-friendly report format.
