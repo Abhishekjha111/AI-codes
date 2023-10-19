@@ -19,3 +19,49 @@ In this query:
 - The `GROUP BY` clause groups the results by `user_id`, year, and month.
 
 This query will give you a count of document openings for each user, broken down by year and month over the last 6 months. You can then use a reporting tool to present this data in a user-friendly report format.
+To achieve your goals, you can break down the tasks as follows:
+
+1. **Total Number of Queries Searched in the Last 10 Months**:
+
+   ```sql
+   SELECT
+       DATEPART(YEAR, query_date) AS year,
+       DATEPART(MONTH, query_date) AS month,
+       COUNT(*) AS query_count
+   FROM dbo.query_response_log
+   WHERE query_date >= DATEADD(MONTH, -10, GETDATE())
+   GROUP BY DATEPART(YEAR, query_date), DATEPART(MONTH, query_date);
+   ```
+
+   This query will give you the total number of queries searched in each month over the last 10 months.
+
+2. **Number of Unique Users Per Month from Jan 2023 till Oct 2023**:
+
+   ```sql
+   SELECT
+       DATEPART(YEAR, query_date) AS year,
+       DATEPART(MONTH, query_date) AS month,
+       COUNT(DISTINCT user_id) AS unique_users
+   FROM dbo.query_response_log
+   WHERE query_date >= '2023-01-01' AND query_date <= '2023-10-31'
+   GROUP BY DATEPART(YEAR, query_date), DATEPART(MONTH, query_date);
+   ```
+
+   This query will provide the number of unique users who performed queries each month from January 2023 until October 2023.
+
+3. **Retrieve All Logged Query Data**:
+
+   To retrieve all the logged query data, simply use a basic `SELECT` query without any filtering. For example:
+
+   ```sql
+   SELECT
+       query_id,
+       query,
+       user_id,
+       query_date
+   FROM dbo.query_response_log;
+   ```
+
+   This query will return all the logged query data including the query ID, query text, user ID, and query date.
+
+You can execute these SQL queries to obtain the desired information for your report. Make sure to adjust column and table names as necessary to match your actual database schema.
